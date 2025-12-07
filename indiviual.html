@@ -7517,35 +7517,70 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="Phenotypic-Bias-in-Heart-Disease-Prediction"><strong>Phenotypic Bias in Heart Disease Prediction</strong><a class="anchor-link" href="#Phenotypic-Bias-in-Heart-Disease-Prediction">¶</a></h1><h3 id="Fairness-and-Explainability-Analysis-using-the-UCI-Heart-Disease-Dataset-(Cleveland)"><em>Fairness and Explainability Analysis using the UCI Heart Disease Dataset (Cleveland)</em><a class="anchor-link" href="#Fairness-and-Explainability-Analysis-using-the-UCI-Heart-Disease-Dataset-(Cleveland)">¶</a></h3><p><strong>Author:</strong> Francisca Mihalache<br/>
+<h1 id="Phenotypic-Bias-in-Heart-Disease-Prediction"><strong>Phenotypic Bias in Heart Disease Prediction</strong><a class="anchor-link" href="#Phenotypic-Bias-in-Heart-Disease-Prediction">¶</a></h1><h3 id="Fairness,-Explainability,-and-Data-Centric-Analysis-of-the-Cleveland-Dataset"><em>Fairness, Explainability, and Data-Centric Analysis of the Cleveland Dataset</em><a class="anchor-link" href="#Fairness,-Explainability,-and-Data-Centric-Analysis-of-the-Cleveland-Dataset">¶</a></h3><p><strong>Author:</strong> Francisca Mihalache<br/>
 <strong>Course:</strong> Artificial Intelligence and Society — Individual Assignment</p>
-<p>The dataset used in this analysis originates from the Cleveland Clinic cohort of 303 consecutive patients referred for coronary angiography between May 1981 and September 1984, as described by Detrano et al. (1989).
-Each patient underwent a detailed clinical assessment including age, sex, chest pain type, systolic blood pressure, serum cholesterol, fasting blood sugar, resting ECG, and three noninvasive tests: exercise electrocardiogram, thallium scintigraphy, and cardiac fluoroscopy.
-These data were collected under controlled conditions and entered into a computerized database, forming the reference group used to derive the Cleveland discriminant function for coronary artery disease (CAD) diagnosis</p>
-<h3 id="Objective"><strong>Objective</strong><a class="anchor-link" href="#Objective">¶</a></h3><p>This notebook explores potential <em>phenotypic bias</em> in heart disease prediction models by analyzing whether performance differs across chest pain types (<code>cp</code>) — <em>typical angina</em>, <em>atypical angina</em>, <em>non-anginal pain</em>, and <em>asymptomatic</em> — in the <strong>UCI Heart Disease (Cleveland)</strong> dataset.</p>
-<p>The study integrates two key Responsible AI dimensions:</p>
-<ul>
-<li><strong>Fairness:</strong> evaluating performance disparities between clinical subgroups.</li>
-<li><strong>Explainability:</strong> using SHAP values to understand which features contribute to those differences.</li>
+<h2 id="1.-Introduction-and-Context"><strong>1. Introduction and Context</strong><a class="anchor-link" href="#1.-Introduction-and-Context">¶</a></h2><p>The deployment of Artificial Intelligence (AI) in high-stakes domains, particularly healthcare, necessitates a rigorous evaluation of <strong>trustworthiness</strong>, moving beyond simple performance metrics such as accuracy. Under the <strong>EU AI Act</strong>, medical diagnostic tools are classified as <strong>High-Risk AI Systems</strong>, requiring strict adherence to data governance, transparency, and human oversight. This study investigates the reliability of heart disease prediction models through the lens of <strong>Responsible AI</strong>, focusing on the tension between aggregate performance and subgroup fairness.</p>
+<h3 id="1.1.-Theoretical-Framework"><strong>1.1. Theoretical Framework</strong><a class="anchor-link" href="#1.1.-Theoretical-Framework">¶</a></h3><p>This analysis adopts a <strong>Data-Centric AI (DC-AI)</strong> perspective, positing that model failures often stem from data intrinsic characteristics (such as noise, overlap, and sparsity) rather than algorithmic deficiencies. We move away from the "Big Data" paradigm towards <strong>"Smart Data"</strong>, prioritizing data quality and representativeness over volume.</p>
+<p>Specifically, we address <strong>phenotypic bias</strong>, a form of <strong>representation bias</strong> where certain clinical presentations (phenotypes) are underrepresented in the training data. In cardiovascular medicine, this often manifests as <strong>within-class imbalance</strong> (or <em>small disjuncts</em>), where minority subgroups (e.g., women with non-anginal pain) form sparse clusters within the class distribution, making them harder for standard classifiers to learn.</p>
+<h3 id="1.2.-Methodology"><strong>1.2. Methodology</strong><a class="anchor-link" href="#1.2.-Methodology">¶</a></h3><p>The study is structured around three pillars of trustworthy AI:</p>
+<ol>
+<li><strong>Data Profiling &amp; Complexity Analysis:</strong> We perform a systematic audit of the <strong>UCI Heart Disease (Cleveland)</strong> dataset to identify <strong>data quality issues</strong> and <strong>intrinsic complexity factors</strong> such as class overlap and imbalance.</li>
+<li><strong>Fairness Assessment:</strong> We evaluate <strong>Group Fairness</strong> metrics, specifically focusing on <strong>Equality of Opportunity</strong> (Equalized Odds), to determine if the model's error rates (False Negatives/Positives) are distributed equitably across biological sex and chest pain types. We also investigate the "Fairness through Unawareness" fallacy by analyzing whether removing sensitive attributes eliminates bias or merely shifts reliance to <strong>proxies</strong>.</li>
+<li><strong>Explainability (XAI):</strong> Utilizing <strong>SHAP (SHapley Additive Exlanations)</strong>, we decompose model predictions into the <strong>marginal contributions</strong> of each feature. This allows us to verify whether the model relies on robust physiological markers or exploits demographic biases, thereby ensuring the <strong>transparency</strong> required by regulatory frameworks.</li>
+</ol>
+<hr/>
+<h2 id="Table-of-Contents"><strong>Table of Contents</strong><a class="anchor-link" href="#Table-of-Contents">¶</a></h2><ol>
+<li><a href="#1-dataset-background-and-structure">Dataset Background and Structure</a><ul>
+<li>1.1 <a href="#11-dataset-loading-and-description">Dataset Loading and Description</a></li>
+<li>1.2 <a href="#12-variable-definitions">Variable Definitions</a></li>
 </ul>
-<p>Results are discussed from both a <strong>technical</strong> and <strong>ethical</strong> standpoint, reflecting on possible subdiagnosis risks for patients with less typical symptoms.</p>
-<p>This analysis adopts a <strong>Data-Centric AI</strong> perspective, emphasizing that model reliability depends primarily on the <em>quality, representativeness, and interpretability of data</em> rather than on algorithmic complexity.<br/>
-The approach follows the principle of transforming <strong>imperfect data into smart data</strong>, by systematically inspecting and improving dataset characteristics such as <em>completeness</em>, <em>balance</em>, and <em>fair representation</em>.</p>
-<p>Within this paradigm, data irregularities are not seen as noise to be ignored but as signals that reveal deeper structural issues — for example, <strong>phenotypic imbalance</strong> (differences across chest pain types) and <strong>demographic skew</strong> (sex-based disparities).<br/>
-By addressing these <em>data intrinsic characteristics</em>, the study aligns with the notion that responsible AI requires continuous <em>data auditing, transparency, and human-in-the-loop validation</em>.<br/>
-This mindset connects directly to the broader Responsible AI dimensions of <em>fairness</em> and <em>explainability</em>, ensuring that the learning process reflects medical and ethical understanding rather than statistical convenience.</p>
-<p>The Cleveland dataset also illustrates key <strong>data complexity factors</strong>, since multiple irregularities coexist — mild imbalance, missingness, and overlapping phenotypes.<br/>
-Such intertwined characteristics increase the <strong>instance hardness</strong> of medical prediction, a concept central to understanding why models may fail to generalize across underrepresented patient subgroups.</p>
-<h3 id="Table-of-Contents">Table of Contents<a class="anchor-link" href="#Table-of-Contents">¶</a></h3><ol>
-<li><a href="#1">Dataset Background and Structure</a></li>
-<li><a href="#2">Exploratory Data Analysis (EDA)</a></li>
-<li><a href="#3">Data Preprocessing</a></li>
-<li><a href="#4">Model Training</a></li>
-<li><a href="#5">Fairness Analysis by Chest Pain Type</a></li>
-<li><a href="#6">Explainability Analysis (SHAP)</a></li>
-<li><a href="#7">Ethical Reflection and Discussion</a></li>
-<li><a href="#8">Conclusions</a></li>
-<li><a href="#9">References</a></li>
+</li>
+<li><a href="#2-exploratory-data-analysis-eda">Exploratory Data Analysis (EDA)</a><ul>
+<li>2.1 <a href="#21-general-information">General Information</a></li>
+<li>2.2 <a href="#22-missing-values">Missing Values</a></li>
+<li>2.3 <a href="#23-chest-pain-type-distribution-cp">Chest Pain Type Distribution (cp)</a></li>
+<li>2.4 <a href="#24-chest-pain-type-vs-sex">Chest Pain Type vs. Sex</a></li>
+<li>2.5 <a href="#25-age-distribution-by-sex">Age Distribution by Sex</a></li>
+<li>2.6 <a href="#26-correlation-matrix-numeric-variables">Correlation Matrix</a></li>
+<li>2.7 <a href="#27-pairplot">Pairplot Analysis</a></li>
+<li>2.8 <a href="#28-missing-data-heatmap">Missing Data Heatmap</a></li>
+<li>2.9 <a href="#29-feature-distributions-by-disease-status">Feature Distributions by Disease Status</a></li>
+<li>2.10 <a href="#210-heart-disease-prevalence-by-chest-pain-type">Prevalence by Chest Pain Type</a></li>
+<li>2.11 <a href="#213-age-vs-maximum-heart-rate-thalach">Physiological Interactions (ECG, BP, Heart Rate)</a></li>
+</ul>
+</li>
+<li><a href="#3-data-preprocessing">Data Preprocessing</a><ul>
+<li>3.1 <a href="#31-handling-missing-values">Handling Missing Values</a></li>
+<li>3.2 <a href="#32-target-variable-transformation">Target Variable Transformation</a></li>
+<li>3.3 <a href="#33-feature-encoding">Feature Encoding &amp; Scaling</a></li>
+</ul>
+</li>
+<li><a href="#4-model-training">Model Training and Selection</a><ul>
+<li>4.1 <a href="#41-data-splitting-train--validation--test">Data Splitting Strategy</a></li>
+<li>4.2 <a href="#42-model-selection-and-training">Model Comparison (LR, RF, XGBoost, MLP)</a></li>
+<li>4.3 <a href="#43-performance-and-fairness-analysis">Performance and Fairness Analysis</a><ul>
+<li>4.3.1 <a href="#431-global-model-performance">Global Performance &amp; Cross-Validation</a></li>
+<li>4.3.2 <a href="#432-gender-specific-performance-analysis">Gender-Specific Performance Analysis</a></li>
+<li>4.3.3 <a href="#433-chest-pain-specific-performance-analysis">Chest-Pain–Specific Performance Analysis</a></li>
+<li>4.3.4 <a href="#434-interaction-chest-pain--sex-performance-analysis">Intersection: Chest Pain × Sex</a></li>
+</ul>
+</li>
+<li>4.4 <a href="#44-shap-based-explainability">SHAP-Based Explainability</a><ul>
+<li>4.4.1 <a href="#441-global-shap">Global Feature Importance</a></li>
+<li>4.4.2 <a href="#442-shap-by-gender">SHAP by Gender</a></li>
+<li>4.4.3 <a href="#443-shap-by-chest-pain-type">SHAP by Chest Pain Type</a></li>
+<li>4.4.4 <a href="#444-local-explanations">Local Explanations (Waterfall Plots)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#5-ethical-reflection-and-discussion">Ethical Reflection and Discussion</a><ul>
+<li>5.1 <a href="#51-phenotypic-and-gender-bias-in-heart-disease-prediction">Phenotypic and Gender Bias</a></li>
+<li>5.2 <a href="#52-potential-harms-and-societal-impact">Potential Harms and Societal Impact</a></li>
+<li>5.3 <a href="#53-relation-to-the-eu-ai-act-and-regulatory-classification">EU AI Act &amp; Regulatory Classification</a></li>
+</ul>
+</li>
+<li><a href="#6-references">References</a></li>
 </ol>
 </div>
 </div>
@@ -7561,37 +7596,16 @@ Such intertwined characteristics increase the <strong>instance hardness</strong>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=698942d9">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=698942d9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [69]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">ucimlrepo</span>
 </pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell-outputWrapper">
-<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
-</div>
-<div class="jp-OutputArea jp-Cell-outputArea">
-<div class="jp-OutputArea-child">
-<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
-<div class="jp-RenderedText jp-OutputArea-output" data-mime-type="text/plain" tabindex="0">
-<pre>Requirement already satisfied: ucimlrepo in /opt/homebrew/lib/python3.11/site-packages (0.0.7)
-Requirement already satisfied: pandas&gt;=1.0.0 in /opt/homebrew/lib/python3.11/site-packages (from ucimlrepo) (2.3.3)
-Requirement already satisfied: certifi&gt;=2020.12.5 in /opt/homebrew/lib/python3.11/site-packages (from ucimlrepo) (2025.11.12)
-Requirement already satisfied: numpy&gt;=1.23.2 in /opt/homebrew/lib/python3.11/site-packages (from pandas&gt;=1.0.0-&gt;ucimlrepo) (2.3.5)
-Requirement already satisfied: python-dateutil&gt;=2.8.2 in /Users/franciscamihalache/Library/Python/3.11/lib/python/site-packages (from pandas&gt;=1.0.0-&gt;ucimlrepo) (2.9.0.post0)
-Requirement already satisfied: pytz&gt;=2020.1 in /opt/homebrew/lib/python3.11/site-packages (from pandas&gt;=1.0.0-&gt;ucimlrepo) (2025.2)
-Requirement already satisfied: tzdata&gt;=2022.7 in /opt/homebrew/lib/python3.11/site-packages (from pandas&gt;=1.0.0-&gt;ucimlrepo) (2025.2)
-Requirement already satisfied: six&gt;=1.5 in /Users/franciscamihalache/Library/Python/3.11/lib/python/site-packages (from python-dateutil&gt;=2.8.2-&gt;pandas&gt;=1.0.0-&gt;ucimlrepo) (1.17.0)
-Note: you may need to restart the kernel to use updated packages.
-</pre>
 </div>
 </div>
 </div>
@@ -7607,31 +7621,12 @@ Note: you may need to restart the kernel to use updated packages.
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=ea7fe8f8">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [70]:</div>
-<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ucimlrepo</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_ucirepo</span> 
-<span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ucimlrepo</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_ucirepo</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">missingno</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">msno</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=0828dd75">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [71]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -7644,6 +7639,12 @@ Note: you may need to restart the kernel to use updated packages.
 <span class="p">)</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfusionMatrixDisplay</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ucimlrepo</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_ucirepo</span> 
+<span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ucimlrepo</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_ucirepo</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">missingno</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">msno</span>
 </pre></div>
 </div>
 </div>
@@ -8185,7 +8186,7 @@ They ensure that feature interpretations and clinical reasoning remain consisten
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.1-General-Information">2.1 General Information<a class="anchor-link" href="#2.1-General-Information">¶</a></h4>
+<h4 id="2.1.-General-Information">2.1. General Information<a class="anchor-link" href="#2.1.-General-Information">¶</a></h4>
 </div>
 </div>
 </div>
@@ -8442,7 +8443,7 @@ The next steps will focus on exploring distributions, feature relationships, and
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.2-Missing-Values">2.2 Missing Values<a class="anchor-link" href="#2.2-Missing-Values">¶</a></h4>
+<h4 id="2.2.-Missing-Values">2.2. Missing Values<a class="anchor-link" href="#2.2.-Missing-Values">¶</a></h4>
 </div>
 </div>
 </div>
@@ -8572,7 +8573,7 @@ Since the Cleveland dataset already maintains a near-balanced distribution betwe
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.3-Chest-Pain-Type-Distribution-(cp)">2.3 Chest Pain Type Distribution (cp)<a class="anchor-link" href="#2.3-Chest-Pain-Type-Distribution-(cp)">¶</a></h4><p>Here we examine how the four <strong>chest pain types (<code>cp</code>)</strong> are distributed across the dataset.<br>
+<h4 id="2.3.-Chest-Pain-Type-Distribution-(cp)">2.3. Chest Pain Type Distribution (cp)<a class="anchor-link" href="#2.3.-Chest-Pain-Type-Distribution-(cp)">¶</a></h4><p>Here we examine how the four <strong>chest pain types (<code>cp</code>)</strong> are distributed across the dataset.<br>
 This helps identify possible <strong>phenotypic imbalance</strong>, for example, whether some clinical presentations are much more common than others, which could later influence model fairness.</br></p>
 </div>
 </div>
@@ -8675,7 +8676,7 @@ However, Detrano et al. noted that even asymptomatic and non-anginal patients co
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.4-Chest-Pain-Type-vs.-Sex">2.4 Chest Pain Type vs. Sex<a class="anchor-link" href="#2.4-Chest-Pain-Type-vs.-Sex">¶</a></h4><p>This table compares <strong>chest pain types (<code>cp</code>)</strong> between <strong>male</strong> and <strong>female</strong> patients.<br/>
+<h4 id="2.4.-Chest-Pain-Type-vs.-Sex">2.4. Chest Pain Type vs. Sex<a class="anchor-link" href="#2.4.-Chest-Pain-Type-vs.-Sex">¶</a></h4><p>This table compares <strong>chest pain types (<code>cp</code>)</strong> between <strong>male</strong> and <strong>female</strong> patients.<br/>
 By observing these distributions, we can check whether certain pain types are more frequent in one sex — a relevant factor in understanding possible <strong>gender-related diagnostic bias</strong>.</p>
 </div>
 </div>
@@ -8782,7 +8783,7 @@ By observing these distributions, we can check whether certain pain types are mo
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.4.1-Chest-Pain-Type-vs.-Sex----Normalized-between-genders">2.4.1 Chest Pain Type vs. Sex -- Normalized between genders<a class="anchor-link" href="#2.4.1-Chest-Pain-Type-vs.-Sex----Normalized-between-genders">¶</a></h4>
+<h4 id="2.4.1.-Chest-Pain-Type-vs.-Sex----Normalized-between-genders">2.4.1. Chest Pain Type vs. Sex -- Normalized between genders<a class="anchor-link" href="#2.4.1.-Chest-Pain-Type-vs.-Sex----Normalized-between-genders">¶</a></h4>
 </div>
 </div>
 </div>
@@ -8880,7 +8881,7 @@ The proportional analysis reveals a clinically meaningful pattern: female patien
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.5-Age-Distribution-by-Sex">2.5 Age Distribution by Sex<a class="anchor-link" href="#2.5-Age-Distribution-by-Sex">¶</a></h4>
+<h4 id="2.5.-Age-Distribution-by-Sex">2.5. Age Distribution by Sex<a class="anchor-link" href="#2.5.-Age-Distribution-by-Sex">¶</a></h4>
 </div>
 </div>
 </div>
@@ -8956,7 +8957,7 @@ This reflects real-world clinical patterns, where women tend to develop heart di
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.6-Correlation-Matrix-(Numeric-Variables)">2.6 Correlation Matrix (Numeric Variables)<a class="anchor-link" href="#2.6-Correlation-Matrix-(Numeric-Variables)">¶</a></h4><p>The heatmap displays pairwise correlations between all numerical features.</p>
+<h4 id="2.6.-Correlation-Matrix-(Numeric-Variables)">2.6. Correlation Matrix (Numeric Variables)<a class="anchor-link" href="#2.6.-Correlation-Matrix-(Numeric-Variables)">¶</a></h4><p>The heatmap displays pairwise correlations between all numerical features.</p>
 </div>
 </div>
 </div>
@@ -9010,7 +9011,7 @@ No extreme multicollinearity is detected, suggesting that all variables can be s
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.7-Pairplot">2.7 Pairplot<a class="anchor-link" href="#2.7-Pairplot">¶</a></h4><p>The pairplot visualizes pairwise relationships between several numeric features, colored by <strong>chest pain type (<code>cp</code>)</strong>.</p>
+<h4 id="2.7.-Pairplot">2.7. Pairplot<a class="anchor-link" href="#2.7.-Pairplot">¶</a></h4><p>The pairplot visualizes pairwise relationships between several numeric features, colored by <strong>chest pain type (<code>cp</code>)</strong>.</p>
 </div>
 </div>
 </div>
@@ -9063,7 +9064,7 @@ In contrast, those with <em>typical angina</em> (blue) usually have <strong>clea
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.8-Missing-Data-Heatmap">2.8 Missing Data Heatmap<a class="anchor-link" href="#2.8-Missing-Data-Heatmap">¶</a></h4>
+<h4 id="2.8.-Missing-Data-Heatmap">2.8. Missing Data Heatmap<a class="anchor-link" href="#2.8.-Missing-Data-Heatmap">¶</a></h4>
 </div>
 </div>
 </div>
@@ -9114,7 +9115,7 @@ This matches previous findings and confirms that missing data is minimal and loc
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.9-Feature-Distributions-by-Disease-Status">2.9 Feature Distributions by Disease Status<a class="anchor-link" href="#2.9-Feature-Distributions-by-Disease-Status">¶</a></h4>
+<h4 id="2.9.-Feature-Distributions-by-Disease-Status">2.9. Feature Distributions by Disease Status<a class="anchor-link" href="#2.9.-Feature-Distributions-by-Disease-Status">¶</a></h4>
 </div>
 </div>
 </div>
@@ -9199,7 +9200,7 @@ People diagnosed with heart disease (blue boxes) tend to have:</p>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.10-Heart-Disease-Prevalence-by-Chest-Pain-Type">2.10 Heart Disease Prevalence by Chest Pain Type<a class="anchor-link" href="#2.10-Heart-Disease-Prevalence-by-Chest-Pain-Type">¶</a></h4><p>This plot examines the <strong>proportion of patients with heart disease</strong> within each chest pain category.<br/>
+<h4 id="2.10.-Heart-Disease-Prevalence-by-Chest-Pain-Type">2.10. Heart Disease Prevalence by Chest Pain Type<a class="anchor-link" href="#2.10.-Heart-Disease-Prevalence-by-Chest-Pain-Type">¶</a></h4><p>This plot examines the <strong>proportion of patients with heart disease</strong> within each chest pain category.<br/>
 It helps identify whether certain pain types — such as <em>asymptomatic</em> or <em>non-anginal</em> — are associated with higher disease prevalence, which is central to understanding <strong>phenotypic bias</strong>.</p>
 </div>
 </div>
@@ -9276,7 +9277,7 @@ This means that people who <strong>do not experience clear pain</strong> are oft
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.11-Age-Distribution-by-Chest-Pain-Type">2.11 Age Distribution by Chest Pain Type<a class="anchor-link" href="#2.11-Age-Distribution-by-Chest-Pain-Type">¶</a></h4><p>This plot compares <strong>age</strong> across the four chest pain types.<br/>
+<h4 id="2.11.-Age-Distribution-by-Chest-Pain-Type">2.11. Age Distribution by Chest Pain Type<a class="anchor-link" href="#2.11.-Age-Distribution-by-Chest-Pain-Type">¶</a></h4><p>This plot compares <strong>age</strong> across the four chest pain types.<br/>
 It helps determine whether older patients are more likely to present atypical or asymptomatic pain,<br/>
 which can contribute to bias when models rely on symptoms rather than physiological measures.</p>
 </div>
@@ -9348,7 +9349,7 @@ Passing `palette` without assigning `hue` is deprecated and will be removed in v
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.12-Sex-Distribution-by-Heart-Disease-Status">2.12 Sex Distribution by Heart Disease Status<a class="anchor-link" href="#2.12-Sex-Distribution-by-Heart-Disease-Status">¶</a></h4><p>This plot visualizes how <strong>male</strong> and <strong>female</strong> patients are distributed across heart disease outcomes.<br/>
+<h4 id="2.12.-Sex-Distribution-by-Heart-Disease-Status">2.12. Sex Distribution by Heart Disease Status<a class="anchor-link" href="#2.12.-Sex-Distribution-by-Heart-Disease-Status">¶</a></h4><p>This plot visualizes how <strong>male</strong> and <strong>female</strong> patients are distributed across heart disease outcomes.<br/>
 It highlights potential <strong>gender imbalances</strong>, which may affect both medical interpretation and model fairness.</p>
 </div>
 </div>
@@ -9408,7 +9409,7 @@ It highlights potential <strong>gender imbalances</strong>, which may affect bot
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.13-Age-vs.-Maximum-Heart-Rate-(thalach)">2.13 Age vs. Maximum Heart Rate (thalach)<a class="anchor-link" href="#2.13-Age-vs.-Maximum-Heart-Rate-(thalach)">¶</a></h4><p>This scatter plot explores the relationship between <strong>age</strong> and <strong>maximum heart rate achieved</strong>,<br/>
+<h4 id="2.13.-Age-vs.-Maximum-Heart-Rate-(thalach)">2.13. Age vs. Maximum Heart Rate (thalach)<a class="anchor-link" href="#2.13.-Age-vs.-Maximum-Heart-Rate-(thalach)">¶</a></h4><p>This scatter plot explores the relationship between <strong>age</strong> and <strong>maximum heart rate achieved</strong>,<br/>
 colored by heart disease status.<br/>
 It provides insight into how cardiovascular performance decreases with age,<br/>
 and whether this decline differs between healthy and affected individuals.</p>
@@ -9470,7 +9471,7 @@ and whether this decline differs between healthy and affected individuals.</p>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.14-Exercise-Stress-(oldpeak)-by-Chest-Pain-Type">2.14 Exercise Stress (oldpeak) by Chest Pain Type<a class="anchor-link" href="#2.14-Exercise-Stress-(oldpeak)-by-Chest-Pain-Type">¶</a></h4><p>This boxplot compares the <strong>ST depression (<code>oldpeak</code>)</strong> among different chest pain types.<br/>
+<h4 id="2.14.-Exercise-Stress-(oldpeak)-by-Chest-Pain-Type">2.14. Exercise Stress (oldpeak) by Chest Pain Type<a class="anchor-link" href="#2.14.-Exercise-Stress-(oldpeak)-by-Chest-Pain-Type">¶</a></h4><p>This boxplot compares the <strong>ST depression (<code>oldpeak</code>)</strong> among different chest pain types.<br/>
 Higher <code>oldpeak</code> values usually indicate greater exercise-induced stress on the heart,<br/>
 making it an important clinical indicator for disease severity.</p>
 </div>
@@ -9543,7 +9544,7 @@ Passing `palette` without assigning `hue` is deprecated and will be removed in v
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.15-Resting-ECG-Results-by-Heart-Disease-Status">2.15 Resting ECG Results by Heart Disease Status<a class="anchor-link" href="#2.15-Resting-ECG-Results-by-Heart-Disease-Status">¶</a></h4><p>This plot examines how <strong>resting electrocardiogram (ECG) results</strong> (<code>restecg</code>) relate to heart disease presence.</p>
+<h4 id="2.15.-Resting-ECG-Results-by-Heart-Disease-Status">2.15. Resting ECG Results by Heart Disease Status<a class="anchor-link" href="#2.15.-Resting-ECG-Results-by-Heart-Disease-Status">¶</a></h4><p>This plot examines how <strong>resting electrocardiogram (ECG) results</strong> (<code>restecg</code>) relate to heart disease presence.</p>
 <p>In the Cleveland study (Detrano et al., 1989), this variable was one of the original predictors used to estimate the probability of coronary artery disease.</p>
 <p>Although not highly discriminative on its own, ECG patterns, particularly <strong>ST–T abnormalities</strong> and <strong>left ventricular hypertrophy</strong>, were found to add diagnostic value when combined with exercise-related features.</p>
 </div>
@@ -9607,7 +9608,7 @@ In this dataset, the variable <code>restecg</code> has three categories:</p>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="2.16-Resting-Blood-Pressure-vs.-Maximum-Heart-Rate-by-Heart-Disease-Status">2.16 Resting Blood Pressure vs. Maximum Heart Rate by Heart Disease Status<a class="anchor-link" href="#2.16-Resting-Blood-Pressure-vs.-Maximum-Heart-Rate-by-Heart-Disease-Status">¶</a></h4><p>This scatter plot explores the relationship between <strong>resting blood pressure (<code>trestbps</code>)</strong> and <strong>maximum heart rate achieved (<code>thalach</code>)</strong> during exercise.<br/>
+<h4 id="2.16.-Resting-Blood-Pressure-vs.-Maximum-Heart-Rate-by-Heart-Disease-Status">2.16. Resting Blood Pressure vs. Maximum Heart Rate by Heart Disease Status<a class="anchor-link" href="#2.16.-Resting-Blood-Pressure-vs.-Maximum-Heart-Rate-by-Heart-Disease-Status">¶</a></h4><p>This scatter plot explores the relationship between <strong>resting blood pressure (<code>trestbps</code>)</strong> and <strong>maximum heart rate achieved (<code>thalach</code>)</strong> during exercise.<br/>
 Detrano et al. (1989) found that these two measurements, when analyzed jointly with age,<br/>
 were significant in distinguishing between healthy and diseased patients — reflecting both cardiovascular efficiency and response to stress.</p>
 </div>
@@ -9688,7 +9689,7 @@ This aligns with the notion that high-quality, interpretable data form the found
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="3.1-Handling-Missing-Values">3.1 Handling Missing Values<a class="anchor-link" href="#3.1-Handling-Missing-Values">¶</a></h4><p>In the original Cleveland study (Detrano et al., 1989), these variables correspond to the three non-invasive diagnostic tests performed on all patients:</p>
+<h4 id="3.1.-Handling-Missing-Values">3.1. Handling Missing Values<a class="anchor-link" href="#3.1.-Handling-Missing-Values">¶</a></h4><p>In the original Cleveland study (Detrano et al., 1989), these variables correspond to the three non-invasive diagnostic tests performed on all patients:</p>
 <ul>
 <li><code>oldpeak</code> — exercise electrocardiogram (ST depression)</li>
 <li><code>thal</code> — thallium scintigraphy</li>
@@ -9741,7 +9742,7 @@ dtype: int64
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="3.2-Target-Variable-Transformation">3.2 Target Variable Transformation<a class="anchor-link" href="#3.2-Target-Variable-Transformation">¶</a></h4><p>In the original Cleveland dataset, the variable <code>num</code> ranges from 0 to 4, indicating the <strong>severity of coronary artery narrowing</strong> (<em>0 = no disease</em>, <em>4 = severe disease</em>), as defined by Detrano et al. (1989).</p>
+<h4 id="3.2.-Target-Variable-Transformation">3.2. Target Variable Transformation<a class="anchor-link" href="#3.2.-Target-Variable-Transformation">¶</a></h4><p>In the original Cleveland dataset, the variable <code>num</code> ranges from 0 to 4, indicating the <strong>severity of coronary artery narrowing</strong> (<em>0 = no disease</em>, <em>4 = severe disease</em>), as defined by Detrano et al. (1989).</p>
 <p>For modeling purposes, we create a new binary target variable that captures <strong>disease presence</strong> rather than severity.<br/>
 Values 1–4 are grouped as <em>“disease present”</em> (<code>1</code>), while 0 represents <em>“no disease”</em> (<code>0</code>).</p>
 <p>This binary target (<code>target</code>) is used for classification and fairness analysis, while the original <code>num</code> values are preserved as <code>severity</code> for interpretability and post-hoc analysis.</p>
@@ -9795,7 +9796,7 @@ Name: count, dtype: int64
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="3.3-Feature-Encoding">3.3 Feature Encoding<a class="anchor-link" href="#3.3-Feature-Encoding">¶</a></h4><p>In the Cleveland dataset, several clinical attributes are <strong>categorical</strong>, representing discrete diagnostic categories rather than continuous measurements.<br/>
+<h4 id="3.3.-Feature-Encoding">3.3. Feature Encoding<a class="anchor-link" href="#3.3.-Feature-Encoding">¶</a></h4><p>In the Cleveland dataset, several clinical attributes are <strong>categorical</strong>, representing discrete diagnostic categories rather than continuous measurements.<br/>
 To make them compatible with machine learning algorithms, we convert these variables into numerical representations.</p>
 <p>The key categorical features are:</p>
 <ul>
@@ -9938,7 +9939,7 @@ dtype: object
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="3.4-Feature-Scaling">3.4 Feature Scaling<a class="anchor-link" href="#3.4-Feature-Scaling">¶</a></h4><p>The numerical variables have <strong>different units and magnitudes</strong>, for instance, <code>age</code> is measured in years, <code>chol</code> in mg/dL, and <code>oldpeak</code> in millivolts.<br/>
+<h4 id="3.4.-Feature-Scaling">3.4. Feature Scaling<a class="anchor-link" href="#3.4.-Feature-Scaling">¶</a></h4><p>The numerical variables have <strong>different units and magnitudes</strong>, for instance, <code>age</code> is measured in years, <code>chol</code> in mg/dL, and <code>oldpeak</code> in millivolts.<br/>
 This difference can distort distance-based algorithms and affect the convergence of gradient-based models.</p>
 <p>To ensure all features contribute equally, we apply <strong>standardization</strong> using <code>StandardScaler</code>, which rescales continuous variables to have <strong>zero mean and unit variance</strong>.<br/>
 This approach maintains comparability while preserving relationships between variables.</p>
@@ -9990,7 +9991,7 @@ This approach maintains comparability while preserving relationships between var
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="3.5-Outlier-Detection">3.5 Outlier Detection<a class="anchor-link" href="#3.5-Outlier-Detection">¶</a></h4><p>Outliers in clinical data can arise from <strong>measurement errors</strong> or <strong>rare pathological conditions</strong>.<br/>
+<h4 id="3.5.-Outlier-Detection">3.5. Outlier Detection<a class="anchor-link" href="#3.5.-Outlier-Detection">¶</a></h4><p>Outliers in clinical data can arise from <strong>measurement errors</strong> or <strong>rare pathological conditions</strong>.<br/>
 Detrano et al. (1989) used carefully curated hospital records, so extreme outliers are uncommon, but identifying them helps ensure data integrity.</p>
 <p>We use the <strong>Interquartile Range (IQR)</strong> method to flag potential outliers without removing clinically valid cases.<br/>
 The goal is to detect unusual deviations in features such as cholesterol (<code>chol</code>), resting blood pressure (<code>trestbps</code>), and ST depression (<code>oldpeak</code>).</p>
@@ -10184,7 +10185,7 @@ Test - Disease: 45.65%
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="4.2-Model-Selection-and-Training">4.2 Model Selection and Training<a class="anchor-link" href="#4.2-Model-Selection-and-Training">¶</a></h3><p>To evaluate how different learning paradigms respond to the complexity and fairness challenges of clinical data, four machine learning models were selected: <strong>Logistic Regression</strong>, <strong>Random Forest</strong>, <strong>XGBoost</strong> and a <strong>Multi-Layer Perceptron</strong>. This selection reflects current findings in the literature, where ensemble-based models like Random Forest and XGBoost have shown superior accuracy on the Cleveland dataset (up to 97–98% AUC), while simpler models such as Logistic Regression remain competitive and highly interpretable.</p>
+<h3 id="4.2.-Model-Selection-and-Training">4.2. Model Selection and Training<a class="anchor-link" href="#4.2.-Model-Selection-and-Training">¶</a></h3><p>To evaluate how different learning paradigms respond to the complexity and fairness challenges of clinical data, four machine learning models were selected: <strong>Logistic Regression</strong>, <strong>Random Forest</strong>, <strong>XGBoost</strong> and a <strong>Multi-Layer Perceptron</strong>. This selection reflects current findings in the literature, where ensemble-based models like Random Forest and XGBoost have shown superior accuracy on the Cleveland dataset (up to 97–98% AUC), while simpler models such as Logistic Regression remain competitive and highly interpretable.</p>
 <p>Each model represents a distinct learning bias: linear (LR), ensemble bagging (RF), boosting (XGB), and deep neural representations (MLP). This diversity enables systematic comparison of:</p>
 <ul>
 <li><strong>Predictive performance under data overlap and imbalance</strong>,</li>
@@ -10202,7 +10203,7 @@ Test - Disease: 45.65%
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="4.2.1-Logistic-Regression">4.2.1 Logistic Regression<a class="anchor-link" href="#4.2.1-Logistic-Regression">¶</a></h4><p><strong>Logistic Regression (LR)</strong> was used as a baseline model due to its simplicity, interpretability, and widespread application in clinical risk prediction. It assumes a linear relationship between the input features and the log-odds of the binary outcome, making it especially useful for identifying linearly separable patterns in the data [1].</p>
+<h4 id="4.2.1.-Logistic-Regression">4.2.1. Logistic Regression<a class="anchor-link" href="#4.2.1.-Logistic-Regression">¶</a></h4><p><strong>Logistic Regression (LR)</strong> was used as a baseline model due to its simplicity, interpretability, and widespread application in clinical risk prediction. It assumes a linear relationship between the input features and the log-odds of the binary outcome, making it especially useful for identifying linearly separable patterns in the data [1].</p>
 <p>In this experiment, L2 regularization was applied to reduce overfitting, and <code>class_weight='balanced'</code> was used to mitigate the mild class imbalance. The model was trained using the same training/validation/test split to ensure fair comparison with other classifiers. Evaluation metrics included accuracy, F1 score (macro and weighted), recall, precision, and log loss.</p>
 <p>Although its capacity to capture complex interactions is limited, LR provides a transparent benchmark for fairness and explainability analysis, especially when compared to more opaque models such as tree ensembles or neural networks [2].</p>
 </div>
@@ -10213,12 +10214,11 @@ Test - Disease: 45.65%
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [99]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># -------------------------</span>
-<span class="c1"># 1. Define evaluation function</span>
-<span class="c1"># -------------------------</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 1. Define evaluation function</span>
+
 <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">):</span>
     <span class="n">y_pred</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
     <span class="n">y_proba</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
@@ -10241,9 +10241,9 @@ Test - Disease: 45.65%
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">metrics</span>
 
-<span class="c1"># -------------------------</span>
+
 <span class="c1"># 2. Train Logistic Regression</span>
-<span class="c1"># -------------------------</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.linear_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogisticRegression</span>
 
 <span class="n">lr_model</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span>
@@ -10254,17 +10254,17 @@ Test - Disease: 45.65%
 <span class="p">)</span>
 <span class="n">lr_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 
-<span class="c1"># -------------------------</span>
+
 <span class="c1"># 3. Evaluate on all sets</span>
-<span class="c1"># -------------------------</span>
+
 <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluate_model</span><span class="p">(</span><span class="n">lr_model</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="s2">"Logistic Regression (Train Set)"</span><span class="p">))</span>
 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluate_model</span><span class="p">(</span><span class="n">lr_model</span><span class="p">,</span> <span class="n">X_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="s2">"Logistic Regression (Validation Set)"</span><span class="p">))</span>
 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluate_model</span><span class="p">(</span><span class="n">lr_model</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="s2">"Logistic Regression (Test Set)"</span><span class="p">))</span>
 
-<span class="c1"># -------------------------</span>
+
 <span class="c1"># 4. Combine metrics</span>
-<span class="c1"># -------------------------</span>
+
 <span class="n">results_lr</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"Dataset"</span><span class="p">)</span>
 <span class="n">display</span><span class="p">(</span><span class="n">results_lr</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
@@ -10374,7 +10374,7 @@ Test - Disease: 45.65%
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="4.2.2-Random-Forest-Classifier">4.2.2 Random Forest Classifier<a class="anchor-link" href="#4.2.2-Random-Forest-Classifier">¶</a></h4><p>The <strong>Random Forest</strong> model serves as a strong baseline.</p>
+<h4 id="4.2.2.-Random-Forest-Classifier">4.2.2. Random Forest Classifier<a class="anchor-link" href="#4.2.2.-Random-Forest-Classifier">¶</a></h4><p>The <strong>Random Forest</strong> model serves as a strong baseline.</p>
 <p>It combines multiple decision trees to reduce variance and improve generalization.<br/>
 It is also compatible with SHAP, which will later be used for explainability analysis.</p>
 </div>
@@ -10385,12 +10385,11 @@ It is also compatible with SHAP, which will later be used for explainability ana
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [100]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># -------------------------</span>
-<span class="c1"># 1. Train Random Forest</span>
-<span class="c1"># -------------------------</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 1. Train Random Forest</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">RandomForestClassifier</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">accuracy_score</span><span class="p">,</span> <span class="n">precision_score</span><span class="p">,</span> <span class="n">recall_score</span><span class="p">,</span> 
@@ -10408,9 +10407,9 @@ It is also compatible with SHAP, which will later be used for explainability ana
 <span class="p">)</span>
 <span class="n">rf_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 
-<span class="c1"># -------------------------</span>
+
 <span class="c1"># 2. Evaluation function</span>
-<span class="c1"># -------------------------</span>
+
 <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">):</span>
     <span class="n">y_pred</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
     <span class="n">y_proba</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
@@ -10437,17 +10436,17 @@ It is also compatible with SHAP, which will later be used for explainability ana
     
     <span class="k">return</span> <span class="n">metrics</span>
 
-<span class="c1"># -------------------------</span>
+
 <span class="c1"># 3. Evaluate on all sets</span>
-<span class="c1"># -------------------------</span>
+
 <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluate_model</span><span class="p">(</span><span class="n">rf_model</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="s2">"Random Forest (Train Set)"</span><span class="p">))</span>
 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluate_model</span><span class="p">(</span><span class="n">rf_model</span><span class="p">,</span> <span class="n">X_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="s2">"Random Forest (Validation Set)"</span><span class="p">))</span>
 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluate_model</span><span class="p">(</span><span class="n">rf_model</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="s2">"Random Forest (Test Set)"</span><span class="p">))</span>
 
-<span class="c1"># -------------------------</span>
+
 <span class="c1"># 4. Combine metrics into table</span>
-<span class="c1"># -------------------------</span>
+
 <span class="n">results_rf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"Dataset"</span><span class="p">)</span>
 <span class="n">display</span><span class="p">(</span><span class="n">results_rf</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
@@ -10568,7 +10567,7 @@ It is also compatible with SHAP, which will later be used for explainability ana
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="4.2.3-XGBoost-Classifier">4.2.3 XGBoost Classifier<a class="anchor-link" href="#4.2.3-XGBoost-Classifier">¶</a></h4><p>The <strong>Extreme Gradient Boosting (XGBoost)</strong> algorithm extends the concept of ensemble trees by using a <strong>boosting strategy</strong> instead of bagging.<br/>
+<h4 id="4.2.3.-XGBoost-Classifier">4.2.3. XGBoost Classifier<a class="anchor-link" href="#4.2.3.-XGBoost-Classifier">¶</a></h4><p>The <strong>Extreme Gradient Boosting (XGBoost)</strong> algorithm extends the concept of ensemble trees by using a <strong>boosting strategy</strong> instead of bagging.<br/>
 While Random Forest builds many independent trees and averages their predictions, XGBoost builds trees <em>sequentially</em> — each new tree focuses on correcting the residual errors of the previous ones.<br/>
 This iterative process allows XGBoost to capture complex nonlinear interactions among clinical features, often achieving higher predictive accuracy.</p>
 <p>From a <strong>Data-Centric AI</strong> perspective, XGBoost is valuable because it can:</p>
@@ -10587,12 +10586,11 @@ This iterative process allows XGBoost to capture complex nonlinear interactions 
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [101]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># -------------------------</span>
-<span class="c1"># 1. Train XGBoost Classifier</span>
-<span class="c1"># -------------------------</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 1. Train XGBoost Classifier</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">xgboost</span><span class="w"> </span><span class="kn">import</span> <span class="n">XGBClassifier</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">accuracy_score</span><span class="p">,</span> <span class="n">precision_score</span><span class="p">,</span> <span class="n">recall_score</span><span class="p">,</span> 
@@ -10600,9 +10598,9 @@ This iterative process allows XGBoost to capture complex nonlinear interactions 
 <span class="p">)</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-<span class="c1"># -------------------------</span>
+
 <span class="c1"># 1. Define evaluation function (reusable for all models)</span>
-<span class="c1"># -------------------------</span>
+
 <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">):</span>
     <span class="n">y_pred</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
     
@@ -10647,17 +10645,17 @@ This iterative process allows XGBoost to capture complex nonlinear interactions 
 <span class="p">)</span>
 <span class="n">xgb_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 
-<span class="c1"># -------------------------</span>
+
 <span class="c1"># 2. Evaluate on all sets</span>
-<span class="c1"># -------------------------</span>
+
 <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluate_model</span><span class="p">(</span><span class="n">xgb_model</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="s2">"XGBoost (Train Set)"</span><span class="p">))</span>
 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluate_model</span><span class="p">(</span><span class="n">xgb_model</span><span class="p">,</span> <span class="n">X_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="s2">"XGBoost (Validation Set)"</span><span class="p">))</span>
 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluate_model</span><span class="p">(</span><span class="n">xgb_model</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="s2">"XGBoost (Test Set)"</span><span class="p">))</span>
 
-<span class="c1"># -------------------------</span>
+
 <span class="c1"># 3. Combine metrics</span>
-<span class="c1"># -------------------------</span>
+
 <span class="n">results_xgb</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"Dataset"</span><span class="p">)</span>
 <span class="n">display</span><span class="p">(</span><span class="n">results_xgb</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
@@ -10767,7 +10765,7 @@ This iterative process allows XGBoost to capture complex nonlinear interactions 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="4.2.4-Multi-Layer-Perceptron-(MLP-Classifier)">4.2.4 Multi-Layer Perceptron (MLP Classifier)<a class="anchor-link" href="#4.2.4-Multi-Layer-Perceptron-(MLP-Classifier)">¶</a></h4><p>The <strong>Multi-Layer Perceptron (MLP)</strong> is a type of feed-forward artificial neural network designed to model complex nonlinear relationships between input features.<br/>
+<h4 id="4.2.4.-Multi-Layer-Perceptron-(MLP-Classifier)">4.2.4. Multi-Layer Perceptron (MLP Classifier)<a class="anchor-link" href="#4.2.4.-Multi-Layer-Perceptron-(MLP-Classifier)">¶</a></h4><p>The <strong>Multi-Layer Perceptron (MLP)</strong> is a type of feed-forward artificial neural network designed to model complex nonlinear relationships between input features.<br/>
 Unlike linear models such as Logistic Regression or tree-based ensembles like Random Forest and XGBoost, the MLP learns hidden feature interactions through <strong>layers of interconnected neurons</strong>, each applying nonlinear activation functions.</p>
 <p>In this study, the MLP is used to assess how deep learning architectures perform on the same dataset and whether their higher representational power improves predictive accuracy.<br/>
 From a <strong>Data-Centric AI</strong> perspective, neural networks are valuable for detecting subtle feature patterns but may also amplify existing data biases if not properly balanced.<br/>
@@ -10780,12 +10778,11 @@ Thus, the comparison between the MLP and traditional models provides insight int
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [102]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># -------------------------</span>
-<span class="c1"># 1. Train MLP Classifier</span>
-<span class="c1"># -------------------------</span>
+<div class="highlight hl-ipython3"><pre><span></span><span class="c1"># 1. Train MLP Classifier</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.neural_network</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLPClassifier</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">accuracy_score</span><span class="p">,</span> <span class="n">precision_score</span><span class="p">,</span> <span class="n">recall_score</span><span class="p">,</span> 
@@ -10805,17 +10802,17 @@ Thus, the comparison between the MLP and traditional models provides insight int
 <span class="p">)</span>
 <span class="n">mlp_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 
-<span class="c1"># -------------------------</span>
+
 <span class="c1"># 2. Evaluate on all sets</span>
-<span class="c1"># -------------------------</span>
+
 <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluate_model</span><span class="p">(</span><span class="n">mlp_model</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="s2">"MLP (Train Set)"</span><span class="p">))</span>
 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluate_model</span><span class="p">(</span><span class="n">mlp_model</span><span class="p">,</span> <span class="n">X_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="s2">"MLP (Validation Set)"</span><span class="p">))</span>
 <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluate_model</span><span class="p">(</span><span class="n">mlp_model</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="s2">"MLP (Test Set)"</span><span class="p">))</span>
 
-<span class="c1"># -------------------------</span>
+
 <span class="c1"># 3. Combine metrics</span>
-<span class="c1"># -------------------------</span>
+
 <span class="n">results_mlp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"Dataset"</span><span class="p">)</span>
 <span class="n">display</span><span class="p">(</span><span class="n">results_mlp</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
@@ -10933,7 +10930,7 @@ Thus, the comparison between the MLP and traditional models provides insight int
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="4.3-Performance-and-Fairness-Analysis">4.3 Performance and Fairness Analysis<a class="anchor-link" href="#4.3-Performance-and-Fairness-Analysis">¶</a></h3><p>This section evaluates how each trained model performs across different demographic groups (e.g., male vs female).<br/>
+<h3 id="4.3.-Performance-and-Fairness-Analysis">4.3. Performance and Fairness Analysis<a class="anchor-link" href="#4.3.-Performance-and-Fairness-Analysis">¶</a></h3><p>This section evaluates how each trained model performs across different demographic groups (e.g., male vs female).<br/>
 The goal is to identify whether certain subpopulations experience systematic disparities in model predictions, reflecting issues of <strong>algorithmic bias</strong>.</p>
 <p>Performance is analyzed along two dimensions:</p>
 <ol>
@@ -10951,7 +10948,7 @@ The goal is to identify whether certain subpopulations experience systematic dis
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="4.3.1-Global-Model-Performance">4.3.1 Global Model Performance<a class="anchor-link" href="#4.3.1-Global-Model-Performance">¶</a></h4>
+<h4 id="4.3.1.-Global-Model-Performance">4.3.1. Global Model Performance<a class="anchor-link" href="#4.3.1.-Global-Model-Performance">¶</a></h4>
 </div>
 </div>
 </div>
@@ -11471,7 +11468,7 @@ The validation score (0.778) remains slightly lower, consistent with early stopp
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h5 id="4.3.1.1-Limitations-of-the-Initial-Train%E2%80%93Validation%E2%80%93Test-Split">4.3.1.1 Limitations of the Initial Train–Validation–Test Split<a class="anchor-link" href="#4.3.1.1-Limitations-of-the-Initial-Train%E2%80%93Validation%E2%80%93Test-Split">¶</a></h5><p>The initial experimental setup relied on a conventional 70–15–15 train–validation–test division. This strategy is commonly used in larger datasets, where each subset contains a sufficient number of samples to provide representative and stable estimates of model performance. However, the Cleveland dataset is relatively small, comprising fewer than 300 instances after preprocessing. As a consequence, the validation and test partitions contained only a few dozen samples each. With such limited data, performance estimates become highly sensitive to sampling variability, and small fluctuations in the composition of each subset can lead to disproportionately large differences in accuracy, F1-score, or error rates.</p>
+<h5 id="4.3.1.1.-Limitations-of-the-Initial-Train-Validation-Test-Split">4.3.1.1. Limitations of the Initial Train-Validation-Test-Split<a class="anchor-link" href="#4.3.1.1.-Limitations-of-the-Initial-Train-Validation-Test-Split">¶</a></h5><p>The initial experimental setup relied on a conventional 70–15–15 train–validation–test division. This strategy is commonly used in larger datasets, where each subset contains a sufficient number of samples to provide representative and stable estimates of model performance. However, the Cleveland dataset is relatively small, comprising fewer than 300 instances after preprocessing. As a consequence, the validation and test partitions contained only a few dozen samples each. With such limited data, performance estimates become highly sensitive to sampling variability, and small fluctuations in the composition of each subset can lead to disproportionately large differences in accuracy, F1-score, or error rates.</p>
 <p>This limitation became evident during the subgroup analyses. When performance was evaluated separately for male and female patients or across different chest pain categories, the extremely small number of samples within each subgroup generated unstable metrics and hindered the ability to draw reliable conclusions. The discrepancy observed earlier between simple models, such as Logistic Regression, and more complex models, such as XGBoost, further illustrated the impact of relying on a single arbitrary split. In particular, the initial configuration misleadingly suggested that XGBoost generalised more poorly than expected, an effect attributable not to the model itself but to the small size and sensitivity of the validation and test sets.</p>
 <p>Given these observations, and following methodological principles emphasised in the course material concerning data scarcity, sampling noise, and robust evaluation, it became necessary to <em>revise the validation strategy</em>.</p>
 <p>To obtain a more reliable estimate of true generalisation performance, the final XGBoost model was re-evaluated using <strong>stratified K-fold cross-validation</strong>. This approach distributes the available samples more effectively, ensures that each instance is used both for training and testing, and reduces variance in performance estimates. The transition to cross-validation therefore reflects the practical constraints imposed by the dataset and provides a more rigorous foundation for the subsequent fairness and subgroup analyses.</p>
@@ -11517,7 +11514,7 @@ The validation score (0.778) remains slightly lower, consistent with early stopp
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [106]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">StratifiedKFold</span>
@@ -11553,35 +11550,35 @@ The validation score (0.778) remains slightly lower, consistent with early stopp
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Running fold </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/5 ..."</span><span class="p">)</span>
 
-    <span class="c1"># ------------------------</span>
+
     <span class="c1"># 1. Select TEST fold</span>
-    <span class="c1"># ------------------------</span>
+
     <span class="n">test_idx</span> <span class="o">=</span> <span class="n">fold_indices</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">X_test_fold</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]</span>
     <span class="n">y_test_fold</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">test_idx</span><span class="p">]</span>
 
-    <span class="c1"># ------------------------</span>
+
     <span class="c1"># 2. Select VALIDATION fold</span>
     <span class="c1">#    We choose the next fold (cyclic)</span>
-    <span class="c1"># ------------------------</span>
+
     <span class="n">val_fold</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">5</span>
     <span class="n">val_idx</span> <span class="o">=</span> <span class="n">fold_indices</span><span class="p">[</span><span class="n">val_fold</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="n">X_val_fold</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">val_idx</span><span class="p">]</span>
     <span class="n">y_val_fold</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">val_idx</span><span class="p">]</span>
 
-    <span class="c1"># ------------------------</span>
+
     <span class="c1"># 3. Remaining 3 folds → TRAIN</span>
-    <span class="c1"># ------------------------</span>
+
     <span class="n">train_folds</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="k">if</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">val_fold</span><span class="p">]]</span>
     <span class="n">train_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">fold_indices</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">train_folds</span><span class="p">])</span>
 
     <span class="n">X_train_fold</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">]</span>
     <span class="n">y_train_fold</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_idx</span><span class="p">]</span>
 
-    <span class="c1"># ------------------------</span>
+
     <span class="c1"># 4. Preprocessing</span>
-    <span class="c1"># ------------------------</span>
+
     <span class="n">X_train_proc</span> <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_train_fold</span><span class="p">)</span>
     <span class="n">X_val_proc</span>   <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_val_fold</span><span class="p">)</span>
     <span class="n">X_test_proc</span>  <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_test_fold</span><span class="p">)</span>
@@ -11590,9 +11587,9 @@ The validation score (0.778) remains slightly lower, consistent with early stopp
     <span class="n">dval</span>   <span class="o">=</span> <span class="n">xgb</span><span class="o">.</span><span class="n">DMatrix</span><span class="p">(</span><span class="n">X_val_proc</span><span class="p">,</span>   <span class="n">label</span><span class="o">=</span><span class="n">y_val_fold</span><span class="p">)</span>
     <span class="n">dtest</span>  <span class="o">=</span> <span class="n">xgb</span><span class="o">.</span><span class="n">DMatrix</span><span class="p">(</span><span class="n">X_test_proc</span><span class="p">,</span>  <span class="n">label</span><span class="o">=</span><span class="n">y_test_fold</span><span class="p">)</span>
 
-    <span class="c1"># ------------------------</span>
+
     <span class="c1"># 5. Model training with early stopping</span>
-    <span class="c1"># ------------------------</span>
+
     <span class="n">booster</span> <span class="o">=</span> <span class="n">xgb</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
         <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
         <span class="n">dtrain</span><span class="o">=</span><span class="n">dtrain</span><span class="p">,</span>
@@ -11604,9 +11601,9 @@ The validation score (0.778) remains slightly lower, consistent with early stopp
 
     <span class="n">best_iterations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">booster</span><span class="o">.</span><span class="n">best_iteration</span><span class="p">)</span>
 
-    <span class="c1"># ------------------------</span>
+
     <span class="c1"># 6. Evaluation on TEST fold</span>
-    <span class="c1"># ------------------------</span>
+
     <span class="n">y_proba</span> <span class="o">=</span> <span class="n">booster</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">dtest</span><span class="p">)</span>
     <span class="n">y_pred</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_proba</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
@@ -11810,16 +11807,16 @@ The following analysis evaluates whether the final XGBoost model behaves consist
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [120]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xgboost</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xgb</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">train_test_split</span>
 
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="c1"># 1. Prepare the target and features</span>
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="c1"># Binary target: 1 = disease present, 0 = no disease</span>
 <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">"Heart Disease"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
@@ -11827,17 +11824,17 @@ The following analysis evaluates whether the final XGBoost model behaves consist
 <span class="n">leak_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Heart Disease"</span><span class="p">,</span> <span class="s2">"Heart Disease Num"</span><span class="p">,</span> <span class="s2">"severity"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">,</span> <span class="s2">"num"</span><span class="p">]</span>
 <span class="n">X</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">leak_cols</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">])</span>
 
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="c1"># 2. Train/Validation split for final model</span>
 <span class="c1">#    (80% training, 20% internal validation)</span>
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="n">X_train_full</span><span class="p">,</span> <span class="n">X_val_full</span><span class="p">,</span> <span class="n">y_train_full</span><span class="p">,</span> <span class="n">y_val_full</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
     <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.20</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span>
 <span class="p">)</span>
 
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="c1"># 3. Preprocess (fit only on training data)</span>
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="n">X_train_proc</span> <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_train_full</span><span class="p">)</span>
 <span class="n">X_val_proc</span>   <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_val_full</span><span class="p">)</span>
 
@@ -11845,9 +11842,9 @@ The following analysis evaluates whether the final XGBoost model behaves consist
 <span class="n">dtrain_full</span> <span class="o">=</span> <span class="n">xgb</span><span class="o">.</span><span class="n">DMatrix</span><span class="p">(</span><span class="n">X_train_proc</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">y_train_full</span><span class="p">)</span>
 <span class="n">dval_full</span>   <span class="o">=</span> <span class="n">xgb</span><span class="o">.</span><span class="n">DMatrix</span><span class="p">(</span><span class="n">X_val_proc</span><span class="p">,</span>   <span class="n">label</span><span class="o">=</span><span class="n">y_val_full</span><span class="p">)</span>
 
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="c1"># 4. XGBoost hyperparameters (validated earlier)</span>
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">"objective"</span><span class="p">:</span> <span class="s2">"binary:logistic"</span><span class="p">,</span>
     <span class="s2">"eval_metric"</span><span class="p">:</span> <span class="s2">"logloss"</span><span class="p">,</span>
@@ -11861,9 +11858,9 @@ The following analysis evaluates whether the final XGBoost model behaves consist
     <span class="s2">"seed"</span><span class="p">:</span> <span class="mi">42</span><span class="p">,</span>
 <span class="p">}</span>
 
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="c1"># 5. Train the final model with early stopping</span>
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="n">booster_final</span> <span class="o">=</span> <span class="n">xgb</span><span class="o">.</span><span class="n">train</span><span class="p">(</span>
     <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
     <span class="n">dtrain</span><span class="o">=</span><span class="n">dtrain_full</span><span class="p">,</span>
@@ -11875,9 +11872,9 @@ The following analysis evaluates whether the final XGBoost model behaves consist
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Final model trained. Best iteration:"</span><span class="p">,</span> <span class="n">booster_final</span><span class="o">.</span><span class="n">best_iteration</span><span class="p">)</span>
 
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="c1"># 6. Wrapper for sklearn-like interface</span>
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="k">class</span><span class="w"> </span><span class="nc">XGBWrapper</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">booster</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">booster</span>
@@ -11895,9 +11892,9 @@ The following analysis evaluates whether the final XGBoost model behaves consist
 <span class="c1"># Final model to be used for fairness and interpretability</span>
 <span class="n">xgb_final</span> <span class="o">=</span> <span class="n">XGBWrapper</span><span class="p">(</span><span class="n">booster_final</span><span class="p">)</span>
 
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="c1"># 7. Leakage and split integrity checks</span>
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="k">def</span><span class="w"> </span><span class="nf">check_split</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">X_split</span><span class="p">,</span> <span class="n">y_split</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="s2">=== </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> ==="</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">"Shape:"</span><span class="p">,</span> <span class="n">X_split</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -11963,7 +11960,7 @@ y distribution: {0: 33, 1: 28}
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [121]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span>
@@ -11973,9 +11970,9 @@ y distribution: {0: 33, 1: 28}
 <span class="c1"># Preprocess test data</span>
 <span class="n">X_test_proc</span> <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="c1"># 2. Split test set by gender</span>
-<span class="c1"># ---------------------------------</span>
+ 
 <span class="n">sex_test</span> <span class="o">=</span> <span class="n">X_test</span><span class="p">[</span><span class="s2">"sex"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
 
 <span class="n">X_test_male</span>   <span class="o">=</span> <span class="n">X_test_proc</span><span class="p">[</span><span class="n">sex_test</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
@@ -12247,6 +12244,168 @@ y distribution: {0: 33, 1: 28}
 <p>The male subgroup exhibits higher sensitivity (TPR = 0.9524) than the female subgroup (TPR = 0.7143), indicating that the classifier detects heart disease more reliably among male patients. However, the female subgroup shows a lower false positive rate (FPR = 0.0 versus 0.20), meaning that the model avoids incorrect positive predictions more effectively for women. Accuracy remains comparable across groups (0.878 for men and 0.900 for women), but F1-scores reveal asymmetry in predictive balance: males display a higher F1 (0.8889), while females show a reduction (0.8333), consistent with their lower sensitivity.</p>
 <p>Fairness indicators reveal disparities in predicted positive rates. Statistical parity is negative (−0.3354), and the disparate impact ratio is substantially below the commonly referenced 0.8 threshold (0.4271), indicating that women receive positive predictions at a markedly lower rate. The equal opportunity gap (−0.2381) confirms that the lower positive prediction rate among women reflects a lower true positive rate rather than a difference in false positives. The average odds difference (−0.219) reinforces that both TPR and FPR deviations contribute to this imbalance.</p>
 <p>These results indicate that, although overall classification performance is high in both groups, the model’s decision boundary is not applied uniformly across genders. The classifier is more sensitive but less specific for male patients, while for female patients it is more conservative, producing fewer false positives but missing a larger fraction of true cases. Such patterns are consistent with known clinical differences in symptom presentation yet highlight the risk of unequal error distribution in automated diagnostic support tools.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a9cbf307">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h5 id="4.3.2.5-Fairness-Mitigation-via-Threshold-Adjustment">4.3.2.5 Fairness Mitigation via Threshold Adjustment<a class="anchor-link" href="#4.3.2.5-Fairness-Mitigation-via-Threshold-Adjustment">¶</a></h5>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=306cf015">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [176]:</div>
+<div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="cm-editor cm-s-jupyter">
+<div class="highlight hl-ipython3"><pre><span></span><span class="n">thr_male</span> <span class="o">=</span> <span class="mf">0.50</span>
+<span class="n">thr_female</span> <span class="o">=</span> <span class="mf">0.40</span>   <span class="c1"># lowered threshold to increase sensitivity for women</span>
+
+<span class="c1"># New predictions with group-specific thresholds</span>
+<span class="n">y_pred_male_adj</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_prob_male</span> <span class="o">&gt;=</span> <span class="n">thr_male</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">y_pred_female_adj</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_prob_female</span> <span class="o">&gt;=</span> <span class="n">thr_female</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+<span class="c1"># Recompute metrics</span>
+<span class="n">metrics_male_adj</span>   <span class="o">=</span> <span class="n">compute_metrics</span><span class="p">(</span><span class="n">y_test_male</span><span class="p">,</span>   <span class="n">y_pred_male_adj</span><span class="p">)</span>
+<span class="n">metrics_female_adj</span> <span class="o">=</span> <span class="n">compute_metrics</span><span class="p">(</span><span class="n">y_test_female</span><span class="p">,</span> <span class="n">y_pred_female_adj</span><span class="p">)</span>
+
+<span class="n">gender_summary_adj</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">[</span> <span class="p">{</span><span class="s2">"Group"</span><span class="p">:</span> <span class="s2">"Male (adj)"</span><span class="p">,</span> <span class="o">**</span><span class="n">metrics_male_adj</span><span class="p">},</span>
+      <span class="p">{</span><span class="s2">"Group"</span><span class="p">:</span> <span class="s2">"Female (adj)"</span><span class="p">,</span> <span class="o">**</span><span class="n">metrics_female_adj</span><span class="p">}</span> <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">display</span><span class="p">(</span><span class="n">gender_summary_adj</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+
+<span class="c1"># Fairness metrics after mitigation</span>
+<span class="n">fairness_results_adj</span> <span class="o">=</span> <span class="n">fairness_metrics</span><span class="p">(</span>
+    <span class="n">y_test_male</span><span class="p">,</span> <span class="n">y_test_female</span><span class="p">,</span>
+    <span class="n">y_pred_male_adj</span><span class="p">,</span> <span class="n">y_pred_female_adj</span>
+<span class="p">)</span>
+
+<span class="n">fairness_df_adj</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">fairness_results_adj</span><span class="p">])</span>
+<span class="n">display</span><span class="p">(</span><span class="n">fairness_df_adj</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell-outputWrapper">
+<div class="jp-Collapser jp-OutputCollapser jp-Cell-outputCollapser">
+</div>
+<div class="jp-OutputArea jp-Cell-outputArea">
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Group</th>
+<th>Accuracy</th>
+<th>F1</th>
+<th>TPR (Sensitivity)</th>
+<th>FPR</th>
+<th>Support</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>Male (adj)</td>
+<td>0.878</td>
+<td>0.8889</td>
+<td>0.9524</td>
+<td>0.2</td>
+<td>41</td>
+</tr>
+<tr>
+<th>1</th>
+<td>Female (adj)</td>
+<td>0.950</td>
+<td>0.9231</td>
+<td>0.8571</td>
+<td>0.0</td>
+<td>20</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="jp-OutputArea-child">
+<div class="jp-OutputPrompt jp-OutputArea-prompt"></div>
+<div class="jp-RenderedHTMLCommon jp-RenderedHTML jp-OutputArea-output" data-mime-type="text/html" tabindex="0">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Statistical Parity</th>
+<th>Disparate Impact Ratio</th>
+<th>Equal Opportunity Gap</th>
+<th>Average Odds Difference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>-0.2854</td>
+<td>0.5125</td>
+<td>-0.0952</td>
+<td>-0.1476</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9bdf8102">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>A simple post-processing intervention was applied to reduce the gender disparity previously observed in sensitivity. The model architecture and training remained unchanged; only the decision threshold was modified, keeping 0.50 for male patients and lowering it to 0.40 for female patients.</p>
+<p>This adjustment substantially improved female sensitivity (from 0.7143 to 0.8571) and increased their F1-score, while preserving overall accuracy and not introducing false positives in this subgroup. Male performance remained effectively stable. Fairness metrics reflect this improvement: the Equal Opportunity Gap decreased in magnitude and the Disparate Impact Ratio increased, although both still indicate residual disparity. Statistical Parity and Average Odds Difference also improved but were not fully corrected.</p>
+<p>In summary, threshold adjustment effectively mitigated the most critical disparity—under-detection in women—illustrating how post-processing can partially improve group fairness without retraining the model, while also showing that deeper structural imbalances require more advanced mitigation strategies.</p>
 </div>
 </div>
 </div>
@@ -12974,7 +13133,7 @@ Overall, the global SHAP profile indicates that the model relies predominantly o
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="4.4.3-SHAP-by-Chest-Pain-Type">4.4.3 SHAP by Chest Pain Type<a class="anchor-link" href="#4.4.3-SHAP-by-Chest-Pain-Type">¶</a></h4><p>To determine whether these disparities stem from differences in how the model internally processes each phenotype, SHAP values were computed separately for each CP subgroup.</p>
+<h4 id="4.4.3.-SHAP-by-Chest-Pain-Type">4.4.3. SHAP by Chest Pain Type<a class="anchor-link" href="#4.4.3.-SHAP-by-Chest-Pain-Type">¶</a></h4><p>To determine whether these disparities stem from differences in how the model internally processes each phenotype, SHAP values were computed separately for each CP subgroup.</p>
 </div>
 </div>
 </div>
@@ -13188,7 +13347,7 @@ Overall, the global SHAP profile indicates that the model relies predominantly o
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h4 id="4.4.4-Local-Explanations">4.4.4 Local Explanations<a class="anchor-link" href="#4.4.4-Local-Explanations">¶</a></h4><p>While the global and subgroup-level SHAP analyses clarify the overall decision logic of the model, they do not reveal how individual predictions succeed or fail in practice. To investigate these mechanisms at the instance level, we now turn to local explanations.</p>
+<h4 id="4.4.4.-Local-Explanations">4.4.4. Local Explanations<a class="anchor-link" href="#4.4.4.-Local-Explanations">¶</a></h4><p>While the global and subgroup-level SHAP analyses clarify the overall decision logic of the model, they do not reveal how individual predictions succeed or fail in practice. To investigate these mechanisms at the instance level, we now turn to local explanations.</p>
 </div>
 </div>
 </div>
@@ -13651,7 +13810,7 @@ Overall, the global SHAP profile indicates that the model relies predominantly o
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [172]:</div>
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
 <div class="highlight hl-ipython3"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -13694,10 +13853,10 @@ Overall, the global SHAP profile indicates that the model relies predominantly o
         <span class="n">show</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">)</span>
 
-<span class="c1"># -------------------------------</span>
+
 <span class="c1"># 4. Improved Layout for Clarity</span>
-<span class="c1"># -------------------------------</span>
-<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">28</span><span class="p">))</span>   <span class="c1"># MUCH larger and wider</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">28</span><span class="p">))</span>   
 <span class="n">axes</span> <span class="o">=</span> <span class="n">axes</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
 
 <span class="c1"># Set same x-range across all plots</span>
@@ -13802,13 +13961,101 @@ Overall, the global SHAP profile indicates that the model relies predominantly o
 </div>
 </div>
 </div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9a0d4b9b">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="5.-Ethical-Reflection-and-Discussion">5. Ethical Reflection and Discussion<a class="anchor-link" href="#5.-Ethical-Reflection-and-Discussion">¶</a></h2>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=deaa316d">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="5.1-Phenotypic-and-gender-bias-in-heart-disease-prediction">5.1 Phenotypic and gender bias in heart disease prediction<a class="anchor-link" href="#5.1-Phenotypic-and-gender-bias-in-heart-disease-prediction">¶</a></h4><p>The empirical results of this study confirm that model performance is not uniform across patient subgroups. Sensitivity is substantially lower for patients with non-anginal chest pain and for women, even when overall test performance is reasonably high. These disparities reflect and potentially reinforce well-documented clinical patterns of underdiagnosis in female patients and in individuals who present with less “typical” ischaemic symptoms.</p>
+<p>From an ethical perspective, these findings raise concerns about distributive justice and non-discrimination. A classifier that systematically produces more false negatives for specific subgroups implicitly encodes a lower standard of protection for those patients. In practice, this may translate into delayed diagnosis, reduced access to timely treatment, and a higher burden of preventable morbidity for individuals whose symptoms deviate from canonical male-centric presentations of coronary artery disease.</p>
+<p>Importantly, the SHAP analyses show that sex and chest-pain phenotype are not merely passive descriptors but actively shape the decision boundary. Being female consistently exerts a strong negative contribution on the predicted probability of disease, while being male has only a small positive effect, regardless of chest-pain type. This structural pattern suggests that the model has learned to down-weight the risk associated with female patients in a global way, which helps explain the reduced sensitivity observed for women across symptom profiles. Such behaviour exemplifies phenotypic and demographic bias: the model inherits and amplifies imbalances present in the training data, instead of correcting for them.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b02cafad">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="5.2-Potential-harms-and-societal-impact">5.2 Potential harms and societal impact<a class="anchor-link" href="#5.2-Potential-harms-and-societal-impact">¶</a></h4><p>If deployed in a clinical workflow, these biases would not be purely technical artefacts. They would materialise as tangible harms for particular groups of patients. False negatives in women or in patients with non-anginal pain could reinforce existing inequities in cardiovascular care, by making it less likely that these individuals are referred for further diagnostic testing or receive aggressive treatment. This risk is especially problematic in cardiology, where delays of hours or days can significantly change prognosis.</p>
+<p>At a societal level, such patterns undermine public trust in AI-assisted medicine. If patients or clinicians perceive that decision-support tools tend to “miss” disease in certain populations, this may foster justified scepticism towards algorithmic systems in healthcare more broadly. Moreover, the opacity of complex models can make it difficult for patients to understand why they were not flagged as high-risk, raising concerns about transparency, accountability, and the right to an explanation in medical decision-making.</p>
+<p>The unequal distribution of errors also interacts with broader structural inequities. Groups that have historically faced underrepresentation in clinical studies or systematic dismissal of their symptoms are precisely those who may be further disadvantaged by biased models. Ethical evaluation therefore cannot be separated from questions of data provenance, representativeness, and the socio-historical context in which the dataset was collected.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=ef4e2fcb">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="5.3-Relation-to-the-EU-AI-Act-and-regulatory-classification">5.3 Relation to the EU AI Act and regulatory classification<a class="anchor-link" href="#5.3-Relation-to-the-EU-AI-Act-and-regulatory-classification">¶</a></h4><p>Under the EU AI Act, this type of predictive model qualifies as an AI system because it uses machine-learning techniques to generate predictions that support decision-making in a specific environment (cardiovascular diagnosis). If integrated into a diagnostic or triage pipeline, it would likely fall under the category of high-risk medical AI systems, given its potential impact on patients’ health and fundamental rights.</p>
+<p>In a high-risk scenario, both developers (“providers”) and clinical institutions (“deployers”) would face specific legal obligations. Providers would need to implement a documented risk-management system, ensure appropriate data governance and quality, and produce technical documentation that describes the model, its intended purpose, performance metrics, and known limitations. Deployers would be responsible for understanding these limitations, monitoring real-world performance, and avoiding over-reliance on algorithmic outputs in the absence of clinical judgement.</p>
+<p>Transparency and explainability are explicitly highlighted in the EU AI Act as essential requirements for high-risk AI. The use of SHAP in this study partially anticipates such obligations by making feature contributions interpretable and by revealing systematic biases against certain subgroups. However, in a real deployment, explainability would need to be complemented with clear documentation for clinicians, user-friendly interfaces for inspecting explanations, and institutional procedures for acting on detected biases (e.g., revising thresholds, retraining with improved data, or suspending use if harmful patterns are identified).</p>
+<p>It is also important to emphasise that, in its current form, the model is a research artefact trained on a historical dataset and not a certified medical device. The AI Act does not directly apply to this academic prototype. Nevertheless, using its framework as a reference helps identify which safeguards would be necessary before any clinical integration.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1552878a">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="5.4-Responsible-AI-practices-implemented-in-this-study">5.4 Responsible AI practices implemented in this study<a class="anchor-link" href="#5.4-Responsible-AI-practices-implemented-in-this-study">¶</a></h4><p>The analysis already incorporates several responsible-AI practices that align with ethical and regulatory expectations:</p>
+<ul>
+<li>A Data-Centric AI perspective was adopted from the start, with careful exploration of class balance, subgroup distributions, and potential sources of phenotypic bias, rather than focusing exclusively on algorithmic complexity.</li>
+<li>Fairness was explicitly evaluated by comparing performance across sex and chest-pain subgroups, instead of reporting only global metrics. This made visible the trade-off between aggregate performance and subgroup-level harms.</li>
+<li>Model behaviour was probed using SHAP, both globally and locally, to understand which features drive predictions and how they interact in typical and atypical cases. This provided concrete evidence of structural bias (e.g., the systematic negative contribution of being female) and of specific failure modes in borderline presentations.</li>
+<li>Local case analyses (true positives, true negatives, and the most unstable false positives/negatives) were used to connect quantitative fairness metrics to clinically interpretable examples. This is crucial for enabling meaningful dialogue between data scientists and medical experts.</li>
+</ul>
+<p>These practices illustrate how fairness and explainability can be integrated into the model-development lifecycle, rather than treated as optional post-hoc checks.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=69c2f2cc">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h4 id="6.5-Remaining-gaps-and-ethical-recommendations">6.5 Remaining gaps and ethical recommendations<a class="anchor-link" href="#6.5-Remaining-gaps-and-ethical-recommendations">¶</a></h4><p>Despite these efforts, important limitations remain from an ethical standpoint. The dataset is small, historical, and geographically limited, which restricts the ability to evaluate intersectional fairness (e.g., combinations of sex, age, and phenotype) or to generalise findings to contemporary, more diverse populations. No external validation cohort was available, and the models were not co-designed or reviewed by clinicians and patient representatives, which would be essential in a real deployment context.</p>
+<p>If a similar system were to be considered for clinical use, several additional steps would be recommended:</p>
+<ul>
+<li>Expanding the dataset to cover multiple institutions and more diverse populations, with explicit attention to underrepresented groups.</li>
+<li>Incorporating fairness constraints or rebalancing strategies during training, and systematically monitoring subgroup-specific performance over time.</li>
+<li>Establishing clear human-in-the-loop protocols, ensuring that clinicians remain ultimately responsible for decisions and are trained to interpret model outputs and explanations critically.</li>
+<li>Creating institutional governance structures (e.g., ethics committees or AI oversight boards) to audit the system periodically, review incidents, and decide whether to adjust, retrain, or decommission the model.</li>
+</ul>
+<p>Overall, this study shows that even relatively standard predictive models can exhibit clinically meaningful biases when trained on imbalanced or historically skewed data. Ethically responsible AI in healthcare therefore requires not only accurate algorithms, but also continuous data auditing, transparent explanations, and robust human oversight to prevent the reinforcement of existing inequities in diagnosis and treatment.</p>
+</div>
+</div>
+</div>
+</div>
 <div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4ced9770">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h3 id="References">References<a class="anchor-link" href="#References">¶</a></h3><p>[1] D. Khanna, R. Sahu, V. Baths, and B. Deshpande, “Comparative Study of Classification Techniques (SVM, Logistic Regression and Neural Networks) to Predict the Prevalence of Heart Disease,” <em>International Journal of Machine Learning and Computing</em>, vol. 5, no. 5, pp. 414–419, Oct. 2015.</p>
+<h2 id="6.-References">6. References<a class="anchor-link" href="#6.-References">¶</a></h2><p>[1] D. Khanna, R. Sahu, V. Baths, and B. Deshpande, “Comparative Study of Classification Techniques (SVM, Logistic Regression and Neural Networks) to Predict the Prevalence of Heart Disease,” <em>International Journal of Machine Learning and Computing</em>, vol. 5, no. 5, pp. 414–419, Oct. 2015.</p>
 <p>[2] “Machine Learning Models for Heart Disease Prediction: Performance, Robustness, and Fairness,” Internal research synthesis, Nov. 2025. (Available upon request)</p>
 <p>[3] Artificial Intelligence and Society course material – M01: Data-Centric AI, Nov. 2025.</p>
 <p>[4] Artificial Intelligence and Society course material – M02: Data Complexity, Nov. 2025.</p>
@@ -13816,6 +14063,16 @@ Overall, the global SHAP profile indicates that the model relies predominantly o
 <p>[6] Artificial Intelligence and Society course material – M04: Bias and Fairness, Nov. 2025.</p>
 <p>[7] Devon, H. A., et al. (2020). <em>Typical and Atypical Symptoms of Acute Coronary Syndrome: Time to Retire the Terms?</em><br/>
 Journal of the American Heart Association, 9(10).</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=c8756ccc">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 </div>
 </div>
 </div>
