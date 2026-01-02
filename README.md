@@ -6,7 +6,7 @@ This repository contains the code and experiments for the Individual Assignment 
 The project conducts a safety-oriented fairness audit on the UCI Heart Disease dataset using XGBoost. It focuses on:
 1.  **Subgroup Reliability:** Analyzing false-negative risks across sex and chest pain phenotypes.
 2.  **Explainability:** Using SHAP (Global, Dependence, and Counterfactual analysis) to diagnose model behavior.
-3.  **Mitigation:** Comparing decoupled models vs. a "Safety-First" dynamic thresholding strategy.
+3.  **Mitigation:** Comparing **Decoupled Models** (training separate classifiers for each sex) vs. a **"Safety-First" Strategy** (calibrating decision thresholds to prioritize recall for high-risk phenotypes).
 
 ## Repository Structure
 * `Individual_Assignment.ipynb`: The Jupyter Notebook containing the full analysis pipeline.
