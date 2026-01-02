@@ -1,38 +1,51 @@
 # Investigating Gender Bias and Interpretability in Heart Disease Prediction Models
 
-## Description
-This repository contains the code and experiments for the Individual Assignment of the **Artificial Intelligence and Society** course (2025/2026).
+Code and experiments for the Individual Assignment of the **Artificial Intelligence and Society** course (2025/2026).
+This project performs a **safety-oriented fairness audit** on the UCI Heart Disease dataset using **XGBoost**, focusing on subgroup reliability and interpretability.
 
-The project conducts a safety-oriented fairness audit on the UCI Heart Disease dataset using XGBoost. It focuses on:
-1.  **Subgroup Reliability:** Analyzing false-negative risks across sex and chest pain phenotypes.
-2.  **Explainability:** Using SHAP (Global, Dependence, and Counterfactual analysis) to diagnose model behavior.
-3.  **Mitigation:** Comparing **Decoupled Models** (training separate classifiers for each sex) vs. a **"Safety-First" Strategy** (calibrating decision thresholds to prioritize recall for high-risk phenotypes).
+## Scope (Read this first)
+- This is an **academic fairness/safety audit** on historical data.
+- **Not a medical device** and **not for clinical use**.
+
+## Project Goals
+
+1. **Subgroup Reliability**
+   - Analyze **false-negative risk** across **sex** and **chest pain (cp) phenotypes**.
+2. **Explainability**
+   - Use **SHAP** for global importance and dependence analysis.
+   - Use **counterfactual-style** probing (as implemented in the notebook) to diagnose model behavior.
+3. **Mitigation**
+   - Compare:
+     - **Decoupled models** (separate classifiers per sex)
+     - **Safety-first thresholds** (phenotype-aware thresholding prioritizing recall for high-risk groups)
 
 ## Repository Structure
-* `Individual_Assignment.ipynb`: The Jupyter Notebook containing the full analysis pipeline.
-* `requirements.txt`: List of Python dependencies required to run the project.
-* `README.md`: This file.
+- `Individual_Assignment.ipynb` — end-to-end analysis (data → training → audit → SHAP → mitigation)
+- `requirements.txt` — Python dependencies
+- `README.md` — project overview and run instructions
 
-## Reproducibility
+## Dataset
+- Source: UCI Heart Disease dataset retrieved via `ucimlrepo` (no manual download).
+- Note: internet access is required at first run to fetch the dataset.
 
-### 1. Prerequisites
-Ensure you have Python 3.10+ installed.
+## Reproducibility Notes
+- The notebook uses `random_state=42` where applicable.
+- Exact metric values may vary slightly across OS/CPU and library versions (e.g., XGBoost + SHAP).
+- For closest reproducibility, use pinned dependency versions and keep CPU settings consistent.
 
-### 2. Installation
-It is recommended to use a virtual environment.
+## Setup
+### 1) Prerequisites
+- Python **3.10+** (tested with Python **3.11**)
 
+### 2) Install
+Recommended: virtual environment
 ```bash
-# Create a virtual environment
-python -m venv venv_FranciscaMihalache
+python -m venv .venv
+source .venv/bin/activate  # macOS/Linux
+# .venv\Scripts\activate   # Windows
 
-# Activate the environment
-# On macOS/Linux:
-source venv_FranciscaMihalache/bin/activate
-# On Windows:
-# venv_FranciscaMihalache\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
+
 ```
 ### 3. Running the Experiments
 
