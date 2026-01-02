@@ -3,7 +3,7 @@
 Code and experiments for the Individual Assignment of the **Artificial Intelligence and Society** course (2025/2026).
 This project performs a **safety-oriented fairness audit** on the UCI Heart Disease dataset using **XGBoost**, focusing on subgroup reliability and interpretability.
 
-## Scope (Read this first)
+## Scope
 - This is an **academic fairness/safety audit** on historical data.
 - **Not a medical device** and **not for clinical use**.
 
@@ -57,6 +57,6 @@ pip install -r requirements.txt
    * **Note:** The dataset is fetched automatically via the `ucimlrepo` library, so no manual data download is required.
    * **Reproducibility:** A global `random_state=42` is set to ensure results match the report.
 
-## Author
+#### Author
 **Francisca Mihalache**
 Master in Artificial Intelligence, University of Porto
